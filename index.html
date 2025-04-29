@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TikTok Content Creator</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header Section -->
+    <header>
+        <h1>TikTok Content Creator</h1>
+        <button id="settings-btn" aria-label="Change API Key"><i class="fas fa-gear"></i></button>
+    </header>
+
+    <!-- Main Content Area -->
+    <main>
+        <!-- Input Card -->
+        <section class="card input-card">
+            <h2>Create Authentic TikTok Content</h2>
+            <div class="input-group">
+                <label for="topic-input">Enter Topic</label>
+                <input type="text" id="topic-input" placeholder="e.g., sustainable fashion, tech trends, cooking hack">
+            </div>
+            
+            <div class="input-group">
+                <label>Select Language</label>
+                <div class="language-toggle">
+                    <input type="radio" id="lang-english" name="language" value="English" checked>
+                    <label for="lang-english">English</label>
+                    <input type="radio" id="lang-bahasa" name="language" value="Bahasa Malaysia">
+                    <label for="lang-bahasa">Bahasa Malaysia</label>
+                </div>
+            </div>
+            
+            <button id="generate-btn" disabled>Create Content Approach</button>
+        </section>
+
+        <!-- Results Section (Hidden Initially) -->
+        <section class="card results-card hidden" id="results-section">
+            <div class="results-header">
+                <h2>Your Content Approach</h2>
+                <button id="copy-btn"><i class="fas fa-copy"></i> Copy</button>
+            </div>
+            <pre id="results-content"></pre>
+        </section>
+    </main>
+
+    <!-- API Key Modal (Hidden Initially) -->
+    <div class="modal-overlay hidden" id="api-modal-overlay">
+        <div class="modal-content">
+            <h2>Enter Your OpenRouter API Key</h2>
+            <p>Your API key is stored locally and never sent to our servers.</p>
+            <input type="password" id="api-key-input" placeholder="Enter your OpenRouter API key">
+            <div class="modal-buttons">
+                <button id="save-api-key-btn">Save Key</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay (Hidden Initially) -->
+    <div class="loading-overlay hidden" id="loading-overlay">
+        <div class="spinner"></div>
+        <p>Creating content...</p>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html> 
