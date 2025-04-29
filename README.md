@@ -1,4 +1,4 @@
-# TikTok Framework & Script Generator
+# TikTok Content Creator
 
 A minimal, modern web application that generates authentic TikTok content approaches and scripts using AI. Simply enter a topic and choose your language to get a natural, relatable content plan for your next TikTok video.
 
@@ -7,6 +7,9 @@ A minimal, modern web application that generates authentic TikTok content approa
 - Clean, modern user interface with smooth transitions
 - API key management via local storage
 - English and Bahasa Malaysia language support
+- Content history with up to 50 saved items
+- Import and export functionality (JSON format)
+- Print-ready output
 - Copy-to-clipboard functionality
 - Responsive design for mobile and desktop
 - Secure API key storage
@@ -36,23 +39,23 @@ A minimal, modern web application that generates authentic TikTok content approa
 - You can change your API key anytime by clicking the gear icon (⚙️) in the header
 - Your API key is never sent to any server except OpenRouter for content generation
 
-## Design Choices
+## Content Management
 
-### UI/UX
+### History
+- Your generated content is automatically saved to your browser's localStorage
+- Access your history by clicking the history icon (⏱️) in the header
+- Click on any history item to load it back into the interface
+- History is limited to the 50 most recent items
 
-- **Color Palette**: Soft purples and blues with ample white space for a clean, professional look
-- **Typography**: System fonts for optimal performance and native feel
-- **Card-based Layout**: Clean separation of input and output sections
-- **Loading States**: Transparent overlay with spinner for clear feedback during API calls
-- **Responsive Design**: Mobile-first approach with adjustments for larger screens
+### Import/Export
+- Export your current content as a JSON file with the export button
+- Export your entire history with the "Export All" button in the history panel
+- Import previously exported content or history with the "Import" button
+- Imported content is validated and merged with your existing history
 
-### Technical
-
-- **Vanilla JavaScript**: No frameworks for maximum performance and simplicity
-- **LocalStorage**: For secure client-side storage of the API key
-- **Fetch API**: For modern, Promise-based network requests
-- **CSS Custom Properties**: For consistent theming and easy customization
-- **Event Delegation**: For efficient event handling
+### Printing
+- Print your generated content with the print button (🖨️)
+- The print view is optimized to show only the content without UI elements
 
 ## Content Approach
 
@@ -70,6 +73,8 @@ The generator creates authentic, non-promotional TikTok content with:
 1. Be specific with your topic for better results
 2. The generated content is designed to feel authentic and conversational
 3. Use the framework as inspiration rather than a rigid structure
+4. Export valuable content for future reference or sharing with collaborators
+5. Use the history feature to keep track of your best content ideas
 
 ## Credits
 

@@ -11,7 +11,10 @@
     <!-- Header Section -->
     <header>
         <h1>TikTok Content Creator</h1>
-        <button id="settings-btn" aria-label="Change API Key"><i class="fas fa-gear"></i></button>
+        <div class="header-buttons">
+            <button id="history-btn" aria-label="View History"><i class="fas fa-history"></i></button>
+            <button id="settings-btn" aria-label="Change API Key"><i class="fas fa-gear"></i></button>
+        </div>
     </header>
 
     <!-- Main Content Area -->
@@ -41,7 +44,11 @@
         <section class="card results-card hidden" id="results-section">
             <div class="results-header">
                 <h2>Your Content Approach</h2>
-                <button id="copy-btn"><i class="fas fa-copy"></i> Copy</button>
+                <div class="results-actions">
+                    <button id="print-btn" title="Print"><i class="fas fa-print"></i></button>
+                    <button id="export-btn" title="Export as JSON"><i class="fas fa-file-export"></i></button>
+                    <button id="copy-btn" title="Copy to Clipboard"><i class="fas fa-copy"></i></button>
+                </div>
             </div>
             <pre id="results-content"></pre>
         </section>
@@ -58,6 +65,30 @@
             </div>
         </div>
     </div>
+
+    <!-- History Modal (Hidden Initially) -->
+    <div class="modal-overlay hidden" id="history-modal-overlay">
+        <div class="modal-content history-modal">
+            <div class="modal-header">
+                <h2>Content History</h2>
+                <div class="history-actions">
+                    <button id="export-all-btn" title="Export All History"><i class="fas fa-file-export"></i> Export All</button>
+                    <button id="import-history-btn" title="Import History"><i class="fas fa-file-import"></i> Import</button>
+                    <button id="clear-history-btn" title="Clear History"><i class="fas fa-trash"></i> Clear</button>
+                </div>
+            </div>
+            <div class="history-list" id="history-list">
+                <!-- History items will be added here dynamically -->
+                <p class="empty-history-message">No history yet. Generate some content to see it here.</p>
+            </div>
+            <div class="modal-buttons">
+                <button id="close-history-btn">Close</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- File Import Input (Hidden) -->
+    <input type="file" id="import-file-input" accept=".json" style="display: none;">
 
     <!-- Loading Overlay (Hidden Initially) -->
     <div class="loading-overlay hidden" id="loading-overlay">

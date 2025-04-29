@@ -1,6 +1,8 @@
 // DOM Elements
 const settingsBtn = document.getElementById('settings-btn');
+const historyBtn = document.getElementById('history-btn');
 const apiModalOverlay = document.getElementById('api-modal-overlay');
+const historyModalOverlay = document.getElementById('history-modal-overlay');
 const apiKeyInput = document.getElementById('api-key-input');
 const saveApiKeyBtn = document.getElementById('save-api-key-btn');
 const topicInput = document.getElementById('topic-input');
@@ -9,13 +11,24 @@ const loadingOverlay = document.getElementById('loading-overlay');
 const resultsSection = document.getElementById('results-section');
 const resultsContent = document.getElementById('results-content');
 const copyBtn = document.getElementById('copy-btn');
+const printBtn = document.getElementById('print-btn');
+const exportBtn = document.getElementById('export-btn');
+const exportAllBtn = document.getElementById('export-all-btn');
+const importHistoryBtn = document.getElementById('import-history-btn');
+const importFileInput = document.getElementById('import-file-input');
+const clearHistoryBtn = document.getElementById('clear-history-btn');
+const closeHistoryBtn = document.getElementById('close-history-btn');
+const historyList = document.getElementById('history-list');
 
 // Constants
 const API_KEY_STORAGE_KEY = 'tiktok_script_generator_api_key';
+const HISTORY_STORAGE_KEY = 'tiktok_content_history';
 const API_ENDPOINT = 'https://openrouter.ai/api/v1/chat/completions';
 
 // State
 let apiKey = localStorage.getItem(API_KEY_STORAGE_KEY) || '';
+let contentHistory = JSON.parse(localStorage.getItem(HISTORY_STORAGE_KEY) || '[]');
+let currentContent = null;
 
 // Initialize the application
 function init() {
@@ -26,9 +39,17 @@ function init() {
     
     // Set up event listeners
     settingsBtn.addEventListener('click', showApiKeyModal);
+    historyBtn.addEventListener('click', showHistoryModal);
     saveApiKeyBtn.addEventListener('click', saveApiKey);
     generateBtn.addEventListener('click', generateScript);
     copyBtn.addEventListener('click', copyToClipboard);
+    printBtn.addEventListener('click', printContent);
+    exportBtn.addEventListener('click', exportCurrentContent);
+    exportAllBtn.addEventListener('click', exportAllHistory);
+    importHistoryBtn.addEventListener('click', () => importFileInput.click());
+    importFileInput.addEventListener('change', importHistory);
+    clearHistoryBtn.addEventListener('click', clearHistory);
+    closeHistoryBtn.addEventListener('click', hideHistoryModal);
     
     // Input validation for enabling/disabling the generate button
     topicInput.addEventListener('input', validateInputs);
@@ -36,17 +57,28 @@ function init() {
         radio.addEventListener('change', validateInputs);
     });
     
-    // Close modal when clicking outside
+    // Close modals when clicking outside
     apiModalOverlay.addEventListener('click', function(e) {
         if (e.target === apiModalOverlay) {
             hideApiKeyModal();
         }
     });
+    
+    historyModalOverlay.addEventListener('click', function(e) {
+        if (e.target === historyModalOverlay) {
+            hideHistoryModal();
+        }
+    });
 
-    // Allow closing modal with Escape key
+    // Allow closing modals with Escape key
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && !apiModalOverlay.classList.contains('hidden')) {
-            hideApiKeyModal();
+        if (e.key === 'Escape') {
+            if (!apiModalOverlay.classList.contains('hidden')) {
+                hideApiKeyModal();
+            }
+            if (!historyModalOverlay.classList.contains('hidden')) {
+                hideHistoryModal();
+            }
         }
     });
 }
@@ -69,6 +101,83 @@ function showApiKeyModal() {
 // Hide API key modal
 function hideApiKeyModal() {
     apiModalOverlay.classList.add('hidden');
+}
+
+// Show history modal
+function showHistoryModal() {
+    historyModalOverlay.classList.remove('hidden');
+    renderHistoryList();
+}
+
+// Hide history modal
+function hideHistoryModal() {
+    historyModalOverlay.classList.add('hidden');
+}
+
+// Render history list
+function renderHistoryList() {
+    if (contentHistory.length === 0) {
+        historyList.innerHTML = '<p class="empty-history-message">No history yet. Generate some content to see it here.</p>';
+        return;
+    }
+    
+    historyList.innerHTML = '';
+    
+    // Sort history by date (newest first)
+    contentHistory.sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    // Create elements for each history item
+    contentHistory.forEach((item, index) => {
+        const historyItem = document.createElement('div');
+        historyItem.classList.add('history-item');
+        historyItem.dataset.index = index;
+        
+        const preview = item.content.split('\n')[0].substring(0, 100) + '...';
+        
+        historyItem.innerHTML = `
+            <div class="history-item-header">
+                <strong>${item.topic}</strong>
+                <span class="history-item-date">${formatDate(new Date(item.date))}</span>
+            </div>
+            <div class="history-item-preview">${preview}</div>
+        `;
+        
+        historyItem.addEventListener('click', () => {
+            loadHistoryItem(index);
+            hideHistoryModal();
+        });
+        
+        historyList.appendChild(historyItem);
+    });
+}
+
+// Format date for display
+function formatDate(date) {
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+// Load history item
+function loadHistoryItem(index) {
+    const item = contentHistory[index];
+    
+    // Set form values
+    topicInput.value = item.topic;
+    document.querySelector(`input[name="language"][value="${item.language}"]`).checked = true;
+    
+    // Display content
+    resultsContent.textContent = item.content;
+    resultsSection.classList.remove('hidden');
+    
+    // Set current content
+    currentContent = {
+        topic: item.topic,
+        language: item.language,
+        content: item.content,
+        date: item.date
+    };
+    
+    // Scroll to results
+    resultsSection.scrollIntoView({ behavior: 'smooth' });
 }
 
 // Save API key
@@ -156,6 +265,17 @@ Focus on authenticity and subtlety rather than hard-selling or overly structured
             throw new Error('Unexpected API response format');
         }
         
+        // Create content object
+        currentContent = {
+            topic,
+            language,
+            content: scriptContent,
+            date: new Date().toISOString()
+        };
+        
+        // Add to history and save
+        addToHistory(currentContent);
+        
         // Display results
         resultsContent.textContent = scriptContent;
         resultsSection.classList.remove('hidden');
@@ -172,6 +292,20 @@ Focus on authenticity and subtlety rather than hard-selling or overly structured
     }
 }
 
+// Add to history
+function addToHistory(content) {
+    // Add to beginning of array (newest first)
+    contentHistory.unshift(content);
+    
+    // Limit history to 50 items
+    if (contentHistory.length > 50) {
+        contentHistory = contentHistory.slice(0, 50);
+    }
+    
+    // Save to localStorage
+    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(contentHistory));
+}
+
 // Copy to clipboard
 function copyToClipboard() {
     const text = resultsContent.textContent;
@@ -181,7 +315,7 @@ function copyToClipboard() {
     navigator.clipboard.writeText(text).then(() => {
         // Visual feedback for copy
         const originalText = copyBtn.innerHTML;
-        copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        copyBtn.innerHTML = '<i class="fas fa-check"></i>';
         
         setTimeout(() => {
             copyBtn.innerHTML = originalText;
@@ -189,6 +323,132 @@ function copyToClipboard() {
     }).catch(err => {
         console.error('Failed to copy text: ', err);
     });
+}
+
+// Print content
+function printContent() {
+    window.print();
+}
+
+// Export current content
+function exportCurrentContent() {
+    if (!currentContent) return;
+    
+    const filename = `tiktok-content-${currentContent.topic.replace(/\s+/g, '-').toLowerCase()}-${new Date().toISOString().split('T')[0]}.json`;
+    const content = JSON.stringify(currentContent, null, 2);
+    
+    downloadJSON(content, filename);
+}
+
+// Export all history
+function exportAllHistory() {
+    if (contentHistory.length === 0) {
+        alert('No history to export.');
+        return;
+    }
+    
+    const filename = `tiktok-content-history-${new Date().toISOString().split('T')[0]}.json`;
+    const content = JSON.stringify(contentHistory, null, 2);
+    
+    downloadJSON(content, filename);
+}
+
+// Download JSON
+function downloadJSON(content, filename) {
+    const blob = new Blob([content], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    
+    setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }, 100);
+}
+
+// Import history
+function importHistory(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const imported = JSON.parse(e.target.result);
+            
+            // Check if it's an array (full history) or a single item
+            if (Array.isArray(imported)) {
+                // Validate each item in the array
+                const validItems = imported.filter(item => 
+                    item.topic && item.language && item.content && item.date
+                );
+                
+                if (validItems.length === 0) {
+                    throw new Error('No valid content items found.');
+                }
+                
+                // Add valid items to history
+                validItems.forEach(item => {
+                    // Check if item already exists
+                    const exists = contentHistory.some(existing => 
+                        existing.topic === item.topic && 
+                        existing.language === item.language && 
+                        existing.content === item.content
+                    );
+                    
+                    if (!exists) {
+                        contentHistory.push(item);
+                    }
+                });
+                
+            } else if (imported.topic && imported.language && imported.content && imported.date) {
+                // It's a single item
+                
+                // Check if item already exists
+                const exists = contentHistory.some(existing => 
+                    existing.topic === imported.topic && 
+                    existing.language === imported.language && 
+                    existing.content === imported.content
+                );
+                
+                if (!exists) {
+                    contentHistory.push(imported);
+                }
+            } else {
+                throw new Error('Invalid import format.');
+            }
+            
+            // Save updated history
+            localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(contentHistory));
+            
+            // Re-render history list
+            renderHistoryList();
+            
+            alert('Import successful!');
+            
+        } catch (error) {
+            console.error('Import error:', error);
+            alert('Error importing file. Please check the file format.');
+        }
+        
+        // Reset file input
+        importFileInput.value = '';
+    };
+    
+    reader.readAsText(file);
+}
+
+// Clear history
+function clearHistory() {
+    if (confirm('Are you sure you want to clear all history? This cannot be undone.')) {
+        contentHistory = [];
+        localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(contentHistory));
+        renderHistoryList();
+    }
 }
 
 // Initialize the application when DOM is loaded
